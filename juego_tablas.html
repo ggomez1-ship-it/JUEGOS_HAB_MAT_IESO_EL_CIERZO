@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juego de las tablas de multiplicar</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f5f7fa;
+        margin: 0;
+        padding: 30px 15px;
+        color: #333;
+    }
+    .contenedor {
+        max-width: 600px;
+        margin: auto;
+    }
+    .cabecera {
+        background: #e8f4f8;
+        border: 2px solid #3498db;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .cabecera h1 { margin: 0; }
+    .cabecera p { margin: 5px; }
+    .juego {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        text-align: center;
+    }
+    #tabla {
+        color: #3498db;
+        margin-bottom: 5px;
+    }
+    #operacion {
+        font-size: 32px;
+        margin: 15px 0;
+    }
+    #respuesta {
+        font-size: 22px;
+        width: 140px;
+        padding: 8px;
+        text-align: center;
+        border: 2px solid #bbb;
+        border-radius: 6px;
+    }
+    button {
+        font-size: 18px;
+        padding: 9px 18px;
+        margin-left: 8px;
+        border: none;
+        border-radius: 6px;
+        background: #3498db;
+        color: white;
+        cursor: pointer;
+    }
+    button:hover { background: #2980b9; }
+    button:disabled {
+        background: #aaa;
+        cursor: default;
+    }
+    #informacion {
+        margin-top: 20px;
+        font-size: 18px;
+    }
+    #mensaje {
+        margin-top: 20px;
+    }
+    .gameover, .victoria {
+        border-radius: 10px;
+        padding: 15px;
+    }
+    .gameover {
+        background: #fdecea;
+        border: 2px solid #e74c3c;
+    }
+    .gameover h2 { color: #e74c3c; }
+    .victoria {
+        background: #eafaf1;
+        border: 2px solid #27ae60;
+    }
+    .victoria h2 { color: #27ae60; }
+    #reiniciar {
+        display: none;
+        background: #27ae60;
+        margin: 20px auto 0;
+    }
+</style>
+</head>
+
+<body>
+<div class="contenedor">
+
+    <div class="cabecera">
+        <h1>🧮 Juego de las tablas de multiplicar</h1>
+        <p>¡Consigue los 100 puntos!</p>
+    </div>
+
+    <div class="juego">
+        <h3 id="tabla">📚 Tabla del 1</h3>
+        <div id="operacion">1 × 1 = ?</div>
+
+        <div>
+            <input id="respuesta" type="number" autofocus>
+            <button id="comprobar">Comprobar</button>
+        </div>
+
+        <div id="informacion">
+            <b>⭐ Puntos:</b> <span id="puntos">0</span>
+            &nbsp;&nbsp;&nbsp;
+            <b>⏱️ Tiempo:</b> <span id="tiempo">0.00</span> segundos
+        </div>
+
+        <div id="mensaje"></div>
+
+        <button id="reiniciar">🔄 Jugar de nuevo</button>
+    </div>
+</div>
+
+<script>
+let puntos = 0;
+let errores = 0;
+let i = 1;
+let j = 1;
+let inicio = Date.now();
+let terminado = false;
+
+const respuesta = document.getElementById("respuesta");
+const comprobar = document.getElementById("comprobar");
+const reiniciar = document.getElementById("reiniciar");
+
+function actualizarTiempo() {
+    if (!terminado) {
+        const segundos = (Date.now() - inicio) / 1000;
+        document.getElementById("tiempo").textContent = segundos.toFixed(2);
+    }
+}
+
+setInterval(actualizarTiempo, 50);
+
+function mostrarPregunta() {
+    document.getElementById("tabla").textContent = "📚 Tabla del " + i;
+    document.getElementById("operacion").textContent = i + " × " + j + " = ?";
+    respuesta.value = "";
+    respuesta.focus();
+}
+
+function gameOver() {
+    terminado = true;
+    errores = 1;
+
+    const tiempo = (Date.now() - inicio) / 1000;
+
+    document.getElementById("mensaje").innerHTML = `
+        <div class="gameover">
+            <h2>❌ Game Over</h2>
+            <p><b>Puntos:</b> ${puntos}</p>
+            <p><b>⏱️ Tiempo:</b> ${tiempo.toFixed(2)} segundos</p>
+        </div>
+    `;
+
+    respuesta.disabled = true;
+    comprobar.disabled = true;
+    reiniciar.style.display = "block";
+}
+
+function victoria() {
+    terminado = true;
+
+    const tiempo = (Date.now() - inicio) / 1000;
+
+    document.getElementById("mensaje").innerHTML = `
+        <div class="victoria">
+            <h2>🎉 ¡Enhorabuena!</h2>
+            <p>Has completado el juego.</p>
+            <p><b>⭐ Puntos:</b> ${puntos}</p>
+            <p><b>⏱️ Tiempo:</b> ${tiempo.toFixed(2)} segundos</p>
+        </div>
+    `;
+
+    respuesta.disabled = true;
+    comprobar.disabled = true;
+    reiniciar.style.display = "block";
+}
+
+function comprobarRespuesta() {
+    if (terminado) return;
+
+    const valor = respuesta.value.trim();
+
+    // Equivalente a tu try/except: si no es un número entero, Game Over.
+    if (valor === "" || !Number.isInteger(Number(valor))) {
+        gameOver();
+        return;
+    }
+
+    const x = Number(valor);
+
+    if (x === i * j) {
+        puntos++;
+        document.getElementById("puntos").textContent = puntos;
+
+        if (puntos === 100) {
+            victoria();
+            return;
+        }
+
+        j++;
+
+        if (j === 11) {
+            j = 1;
+            i++;
+        }
+
+        mostrarPregunta();
+    } else {
+        gameOver();
+    }
+}
+
+function reiniciarJuego() {
+    puntos = 0;
+    errores = 0;
+    i = 1;
+    j = 1;
+    inicio = Date.now();
+    terminado = false;
+
+    document.getElementById("puntos").textContent = "0";
+    document.getElementById("mensaje").innerHTML = "";
+
+    respuesta.disabled = false;
+    comprobar.disabled = false;
+    reiniciar.style.display = "none";
+
+    mostrarPregunta();
+}
+
+comprobar.addEventListener("click", comprobarRespuesta);
+
+respuesta.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        comprobarRespuesta();
+    }
+});
+
+reiniciar.addEventListener("click", reiniciarJuego);
+
+mostrarPregunta();
+</script>
+
+</body>
+</html>
